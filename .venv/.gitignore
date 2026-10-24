@@ -1,0 +1,42 @@
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local databases and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Python testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Large model weights
+*.pth
+*.pt
+*.h5
+*.onnx
+
+# Local uploads and datasets
+static/uploads/*
+datasets/
+dataset/
