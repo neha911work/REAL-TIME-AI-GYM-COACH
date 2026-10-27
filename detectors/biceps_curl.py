@@ -5,8 +5,9 @@ from core.base_exercise import BaseExercise
 class BicepCurlDetector(BaseExercise):
     UP_THRESHOLD = 50
     DOWN_THRESHOLD = 160
-    MIN_VISIBILITY = 0.06
-    SWING_THRESHOLD = 13
+    MIN_VISIBILITY = 0.7
+    ELBOW_DRIFT_TOLERANCE = 0.06
+    SWING_THRESHOLD = 15
 
 
     LEFT_SHOULDER = 11
@@ -46,5 +47,56 @@ class BicepCurlDetector(BaseExercise):
             self.get_point(landmarks, wrist_idx),
         )
 
-        key_landmarks_visible = landmarks[shoulder_idx].visibility
+        key_landmarks_visible = landmarks[shoulder_idx].visibility > self.MIN_VISIBILITY
+
+        if key_landmarks_visible:
+            if elbow_angle < self.UP_THRESHOLD:
+                self.stage = "up"
+
+            if elbow_angle > self.DOWN_THRESHOLD and self.stage == "up":
+                self.stage = "down"
+                self.reps += 1
+
+            shoulder_x = landmarks[shoulder_idx].x
+            elbow_x = landmarks[elbow_idx].x
+            elbow_drift = abs(elbow_x - shoulder_x)
+
+            if elbow_drift <= self.ELBOW_DRIFT_TOLERANCE:
+                shoulder_status = "STABLE"
+            else:
+                shoulder_status = "ELBOW DRIFTING"
+
+            shoulder_mid_x = (landmarks[self.LEFT_SHOULDER].x + landmarks[self.RIGHT_SHOULDER].x) / 2
+            shoulder_mid_y = (landmarks[self.LEFT_SHOULDER].y + landmarks[self.RIGHT_SHOULDER].y) / 2
+
+            hip_mid_x = (landmarks[self.LEFT_HIP].x + landmarks[self.RIGHT_HIP]) / 2
+            hip_mid_y = (landmarks[self.LEFT_HIP].y + landmarks[self.RIGHT_HIP]) / 2
+
+            dx = shoulder_mid_x - hip_mid_x
+            dy = shoulder_mid_y - hip_mid_y
+
+            torso_angle_from_vertical = self._safe_angle(dx, dy)
+
+            if torso_angle_from_vertical <= self.SWING_THRESHOLD:
+                swing_status = "NO SWING"
+            else:
+                swing_status = "SWINGING"
+
+            return {
+                "reps": self.reps,
+                "elbow_angle": int(elbow_angle),
+                "shoulder_status": shoulder_status,
+                "swing_status": swing_status,
+            }
+
+        def _safe_angle(self, dx, dy):
+            return math.degrees(math.atan2(abs(dx), abs(dy))) if dy != 0 else 0.0
+
+
+
+
+
+
+            
+
 
